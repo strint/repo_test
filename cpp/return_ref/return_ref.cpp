@@ -1,5 +1,12 @@
 #include <string>
 #include <iostream>
+#include <functional>
+
+std::function<const std::string &()> getFunc() {
+    std::string str = "str";
+    auto func = [str]() -> const std::string& { return str; };
+    return func;
+}
 
 std::string getStr1() {
     std::string str = "str1";
@@ -15,7 +22,8 @@ const std::string& getStr2() {
 class A {
 public:
     A(int xx) : x(xx) { std::cout << "A::A(" << x << ")" << std::endl; }
-    int Out() const { std::cout << x << std::endl;}
+    A(const A& a) { x = a.x; std::cout << "A::A(" << x << ") copy" << std::endl; }
+    int Out() const { std::cout << x << ", " << __LINE__ << std::endl;}
 private:
     int x{0};
 };
@@ -38,9 +46,38 @@ A getA3()
     return a;
 }
 
+std::function<const A&()> getFunc2() {
+    A a(4);
+    std::cout << "before func2" << std::endl;
+    auto func = [a]() -> const A& { return a; };
+    std::cout << "after func2" << std::endl;
+    return func;
+}
+
+std::function<const A&()> getFunc3() {
+    A a(5);
+    std::cout << "before func3" << std::endl;
+    auto func = [a]() -> A { return a; };
+    std::cout << "after func3" << std::endl;
+    return func;
+}
+
 
 int main()
 {
+    auto func = getFunc();
+    std::cout << func() << std::endl;
+
+    std::cout << "before Func2" << std::endl;
+    auto func2 = getFunc2();
+    std::cout << "after Func2" << std::endl;
+    func2().Out();
+
+    std::cout << "before Func3" << std::endl;
+    auto func3 = getFunc3();
+    std::cout << "after Func3" << std::endl;
+    func3().Out();
+
     const std::string& str1 = getStr1();
     std::cout << str1 << std::endl;
     const std::string& str2 = getStr2();
