@@ -46,20 +46,30 @@ A getA3()
     return a;
 }
 
-std::function<const A&()> getFunc2() {
+void getFunc2(std::function<const A&()>& func) {
     A a(4);
     std::cout << "before func2" << std::endl;
-    auto func = [a]() -> const A& { return a; };
+    func = [a]() -> const A& { return a; };
     std::cout << "after func2" << std::endl;
-    return func;
 }
 
-std::function<const A&()> getFunc3() {
+void getFunc3(std::function<A()>& func) {
     A a(5);
     std::cout << "before func3" << std::endl;
-    auto func = [a]() -> A { return a; };
+    func = [a]() -> A { return a; };
     std::cout << "after func3" << std::endl;
-    return func;
+}
+
+void getFunc4(std::function<const A&()>& func) {
+    std::cout << "before func4" << std::endl;
+    func = []() -> const A& { A a(6); return a; };
+    std::cout << "after func4" << std::endl;
+}
+
+void getFunc5(std::function<A()>& func) {
+    std::cout << "before func5" << std::endl;
+    func = []() -> A { A a(7); return a; };
+    std::cout << "after func5" << std::endl;
 }
 
 
@@ -69,14 +79,28 @@ int main()
     std::cout << func() << std::endl;
 
     std::cout << "before Func2" << std::endl;
-    auto func2 = getFunc2();
+    std::function<const A&()> func2;
+    getFunc2(func2);
     std::cout << "after Func2" << std::endl;
     func2().Out();
 
     std::cout << "before Func3" << std::endl;
-    auto func3 = getFunc3();
+    std::function<A()> func3;
+    getFunc3(func3);
     std::cout << "after Func3" << std::endl;
     func3().Out();
+
+    std::cout << "before Func4" << std::endl;
+    std::function<const A&()> func4;
+    getFunc4(func4);
+    std::cout << "after Func4" << std::endl;
+    func4().Out();
+
+    std::cout << "before Func5" << std::endl;
+    std::function<A()> func5;
+    getFunc5(func5);
+    std::cout << "after Func5" << std::endl;
+    func5().Out();
 
     const std::string& str1 = getStr1();
     std::cout << str1 << std::endl;
