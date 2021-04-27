@@ -1,6 +1,37 @@
 #include <string>
 #include <iostream>
 #include <functional>
+#include <memory>
+#include <typeinfo>
+#include <type_traits>
+#ifndef _MSC_VER
+#   include <cxxabi.h>
+#endif
+
+// ref to https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c
+template <class T>
+std::string type_name() {
+    typedef typename std::remove_reference<T>::type TR;
+    std::unique_ptr<char, void(*)(void*)> own (
+#ifndef _MSC_VER
+        abi::__cxa_demangle(typeid(TR).name(), nullptr,
+                            nullptr, nullptr),
+#else
+        nullptr,
+#endif
+        std::free
+    );
+    std::string r = own != nullptr ? own.get() : typeid(TR).name();
+    if (std::is_const<TR>::value)
+        r += " const";
+    if (std::is_volatile<TR>::value)
+        r += " volatile";
+    if (std::is_lvalue_reference<T>::value)
+        r += "&";
+    else if (std::is_rvalue_reference<T>::value)
+        r += "&&";
+    return r;
+}
 
 std::function<const std::string &()> getFunc() {
     std::string str = "str";
@@ -72,6 +103,23 @@ void getFunc5(std::function<A()>& func) {
     std::cout << "after func5" << std::endl;
 }
 
+std::shared_ptr<int> return_shared_by_value() {
+    auto sp_of_int1 = std::make_shared<int>(10);
+    std::cout << "ret shared_ptr by value, ref count " << sp_of_int1.use_count() << std::endl;
+    return sp_of_int1;
+}
+
+const std::shared_ptr<int>& return_shared_by_const_ref() {
+    auto sp_of_int2 = std::make_shared<int>(10);
+    std::cout << "ret shared_ptr by value, ref count " << sp_of_int2.use_count() << std::endl;
+    return sp_of_int2;
+}
+
+const std::shared_ptr<int>& return_shared_by_const_ref2() {
+    auto sp_of_int2 = std::make_shared<int>(10);
+    std::cout << "ret shared_ptr by value, ref count " << sp_of_int2.use_count() << std::endl;
+    return sp_of_int2;
+}
 
 int main()
 {
@@ -118,4 +166,14 @@ int main()
 
     const A& newA4 = getA3(); //4
     newA4.Out();
+
+    auto sp_of_ret1 = return_shared_by_value();
+    std::cout << "ret shared_ptr by value with type " << type_name<decltype(sp_of_ret1)>() << " ref count " << sp_of_ret1.use_count() << std::endl;
+
+    auto sp_of_ret2 = return_shared_by_const_ref();
+    std::cout << "ret shared_ptr by const ref with type " << type_name<decltype(sp_of_ret2)>() << " ref count " << sp_of_ret2.use_count() << std::endl;
+    std::cout << "ret shared_ptr by const ref with type " << type_name<decltype(return_shared_by_const_ref())>() << " ref count " << sp_of_ret2.use_count() << std::endl;
+
+    const auto& sp_of_ret3 = return_shared_by_const_ref2();
+    std::cout << "ret shared_ptr by const ref with type " << type_name<decltype(sp_of_ret1)>() << " ref count " << sp_of_ret3.use_count() << std::endl;
 }
