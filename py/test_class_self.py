@@ -29,3 +29,36 @@ o.__class__.__call__(o, 6)
 o.__class__.__call__(o2, 6)
 
 
+is_consistent = False
+
+class P:
+  def __init__(self, x):
+    global is_consistent
+    if is_consistent:
+      self.v = x / 2
+    else:
+      self.v = x
+
+class M:
+  def __init__(self, x):
+    self.p = P(x)
+
+  def __call__(self, input):
+    return input * self.p.v
+
+class CM:
+  def __init__(self, cls, *args, **kwargs):
+    self.cls = cls
+    global is_consistent
+    is_consistent = True
+    self.m = self.cls(*args, **kwargs)
+    is_consistent = False
+
+  def __call__(self, *args):
+    return self.m(*args)
+
+m = M(2)
+print(m(10))    # 20
+
+c_m = CM(M, 2)
+print(c_m(10))  # 10
